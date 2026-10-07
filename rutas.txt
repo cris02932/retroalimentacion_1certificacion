@@ -1,0 +1,23 @@
+# tengo que crear /crear_usuario
+# /iniciar_sesion
+
+
+
+
+
+
+
+
+
+
+
+
+
+crear entorno virtual python -m pipenv install flask  flask-bcrypt pymysql
+
+
+
+
+
+
+#nos falta template controllers css y comentarios
