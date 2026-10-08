@@ -1,5 +1,12 @@
 #TODAS LAS CLASES IMPORTAN MYSQLCONNECTION
 from flask_app.config.mysqlconnection import connectToMySQL
+import re   # Importamos expresiones regulares
+from flask import flash
+
+# Objeto de expresión regular que usaremos para validar
+
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+.[a-zA-Z]+$')
+
 
 class Usuario:
 
@@ -49,5 +56,51 @@ class Usuario:
         def delete(cls, datos):
             query = "DELETE FROM usuarios WHERE id = %(id)s;"
             return connectToMySQL('CinePediarepaso').query_db(query, datos)
+
+
+
+        @classmethod
+        def get_by_email(cls, datos):
+            query = "SELECT * FROM usuarios WHERE id = %(id)s;"
+            usuario_en_db = connectToMySQL('CinePediarepaso').query_db(query,datos)
+            return cls(usuario_en_db[0])
+
+
+        #Usamos metodo estatico para validar los formularios
+        @staticmethod
+        def validar_usuario( usuario ):
+
+            es_valido = True
+
+            #Revisa si el campo coincide con el patrón
+
+            if not EMAIL_REGEX.match(usuario['email']):
+
+                flash("E-mail inválido")
+
+                es_valido = False
+            if len(usuario['nombre']) <=2:
+                flash("El nombre del Usuario necesita al menos 2 caracteres", "usuario")
+                es_valido = False
+            if len(Usuario['apellido']) <=2:
+                flash("El apellido del Usuario necesita al menos 2 caracteres", "usuario")
+                es_valido = False
+            if len(Usuario['password']) == Usuario['password_conf']:
+                flash("La contraseña no coincide con la confirmacion")
+                es_valido = False
+            #Falta validacion de contraseña = confirmacion de contraseña
+
+            return es_valido
+
+        
+
+
+        @classmethod
+        def validar_login(usuario):
+
+            es_valido = True
+
+            if not Usuario.get_by_email({'email':Usuario['email']}):
+                flash('el correo no se encuetra en la base de datos')
 
 
