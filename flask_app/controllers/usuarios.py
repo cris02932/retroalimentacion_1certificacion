@@ -1,7 +1,9 @@
 from flask_app import app
-from flask import render_template
+from flask import render_template, request, redirect, flash, session
 from flask_app.models.usuario import Usuario
 from flask_bcrypt import Bcrypt #Importamos bycrpt
+
+bcrypt = Bcrypt(app) #Generamos un objeto llamado bcrypt
 
 @app.route("/")
 def inicio():
@@ -9,15 +11,27 @@ def inicio():
 
 
 #registro crear usuario
-@app.route("/crear_usuario", methods=['POST'])
+@app.route("/crear_usuario", methods=["POST"])
 def crear_usuario():
+
+     #para agregar un usuario lo primero que debo hacer es
+    #recuperar la informacion desde el formulario
+    #para hacer eso necesitamos el request.form
+    #%(nombre)s, %(apellido)s, %(email)s,%(password)s
+
+    #--- IMPORTANTE: TEORICAMENTE ANTES DE REGISTRAR UN NUEVO DATO
+    #--- YO DEBERÍA VALIDAR QUE LOS DATOS INGRESADOS
+    #--- SEAN VALIDOS
+
     if not Usuario.validar_usuario(reques.form):
-        flash("El correo es obligatorio", "correo") #La categoría es "correo"
+        print("Usuario Invalido")
         return redirect('/')
 
-    #para agregar un nuevo usuario lo primero que debo hacer es recuperar la informacion desde el formulario 
-    #para hacer eso necesitamo el request.form
-    #(%(nombre)s, %(apellido)s, %(email)s, %(password)s
+    #--- VALIDACIONES ---
+    #Hasheamos la contraseña
+
+    pass_hasheado = bcrypt.generate_password_hash(request.form['password'])
+
     datos_usuario_registros = {
         "nombre": request.form ['nombre'],
         "apellido": request.form ['apellido'],
@@ -26,13 +40,33 @@ def crear_usuario():
         
     }
 
+    nuevo_id = Usuario.save(datos_usuario_registro) #Recibiendo el ID del nuevo Usuario
+
+    session['usuario_id'] = nuevo_id
+
+    return redirect('/cine')
 
 
-    return 
+
+#inicio sesión 
+@app.route('/iniciar_sesion', methods=['POST'])
+def iniciar_sesion():
+    #buscamos al usuario por su email
+    usuario = Usuario.get_by_email({'email': request.form['email_inicio_sesion']})
+
+    #si no existe o la contraseña no coincide, mostramos el mismo mensaje
+    if not usuario or not bcrypt.check_password_hash(usuario.password, request.form['password_inicio_sesion']):
+        flash("E-mail o contraseña incorrectos", "inicio_sesion")
+        return redirect('/')
+
+    session['usuario_id'] = usuario.id
+    session['nombre'] = usuario.nombre
+    return redirect('/cine')
 
 
+#cerrar sesión
+@app.route('/cerrar_sesion')
+def cerrar_sesion():
 
-#inicio de sesion
-
-
-#cerrrar sesion
+    session.clear()
+    return redirect('/')

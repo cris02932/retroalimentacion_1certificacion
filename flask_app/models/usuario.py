@@ -10,6 +10,7 @@ EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+.[a-zA-Z]+$')
 
 class Usuario:
 
+    #metodo constructor
     def __init__(self, data):
         self.id = data.get('id')
         self.nombre = data.get('nombre')
@@ -44,6 +45,10 @@ class Usuario:
         def get_one(cls,datos):
             query = "SELECT * FROM usuarios WHERE id = %(id)s;"
             usuario_en_db = connectToMySQL('CinePediarepaso').query_db(query,datos)
+            print("USUARIO EN DB",usuario_en_db)
+            if not usuario_en_db:
+                return None
+            return cls(usuario_en_db[0])
 
         #Metodo para editar registro
         @classmethod
@@ -62,45 +67,39 @@ class Usuario:
         @classmethod
         def get_by_email(cls, datos):
             query = "SELECT * FROM usuarios WHERE id = %(id)s;"
+
             usuario_en_db = connectToMySQL('CinePediarepaso').query_db(query,datos)
+
+            print("USUARIO EN DB",usuario_en_db)
+            if not usuario_en_db:
+                return None
             return cls(usuario_en_db[0])
+            #Si no tenemos respuestas en la base de datos, va a retornar False
 
 
         #Usamos metodo estatico para validar los formularios
         @staticmethod
-        def validar_usuario( usuario ):
-
+        def validar_registro(formulario):
             es_valido = True
 
-            #Revisa si el campo coincide con el patrón
+            if len(formulario['nombre']) < 2:
+                flash("El nombre debe tener al menos 2 caracteres", "registro")
+                es_valido = False
 
-            if not EMAIL_REGEX.match(usuario['email']):
+            if len(formulario['apellido']) < 2:
+                flash("El apellido debe tener al menos 2 caracteres", "registro")
+                es_valido = False
 
-                flash("E-mail inválido")
+            if not EMAIL_REGEX.match(formulario['email']):
+                flash("El email no tiene un formato válido", "registro")
+                es_valido = False
+            elif Usuario.get_by_email({'email': formulario['email']}):
+                print(Usuario.get_by_email({'email': formulario['email']}))
+                flash("Ya existe una cuenta con ese email", "registro")
+                es_valido = False
 
+            if formulario['password'] != formulario['password_conf']:
+                flash("Las contraseñas no coinciden", "registro")
                 es_valido = False
-            if len(usuario['nombre']) <=2:
-                flash("El nombre del Usuario necesita al menos 2 caracteres", "usuario")
-                es_valido = False
-            if len(Usuario['apellido']) <=2:
-                flash("El apellido del Usuario necesita al menos 2 caracteres", "usuario")
-                es_valido = False
-            if len(Usuario['password']) == Usuario['password_conf']:
-                flash("La contraseña no coincide con la confirmacion")
-                es_valido = False
-            #Falta validacion de contraseña = confirmacion de contraseña
 
             return es_valido
-
-        
-
-
-        @classmethod
-        def validar_login(usuario):
-
-            es_valido = True
-
-            if not Usuario.get_by_email({'email':Usuario['email']}):
-                flash('el correo no se encuetra en la base de datos')
-
-

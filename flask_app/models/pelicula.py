@@ -17,6 +17,7 @@ class Pelicula:
         @classmethod
         def save(cls, data):
             query = "INSERT INTO peliculas (nombre, director, fecha_estreno, sinopsis, created_at, updated_at, usuario_id) VALUES (%(nombre)s, %(director)s, %(fecha_estreno)s, %(sinopsis)s, NOW() NOW()), %(usuario_id)s"
+
             return connectToMySQL ('CinePediarepaso').query_db(query, data)
 
 
@@ -31,6 +32,7 @@ class Pelicula:
             for peliculas in peliculas_en_bd:
                 #voy a crear una instancia de la clase Usuario al final de la lista usuarios
                 peliculas.append(cls(pelicula))
+                
             return peliculas
 
         #Metodo para ver 1 registro
@@ -39,10 +41,13 @@ class Pelicula:
             query = "SELECT * FROM peliculas WHERE id = %(id)s;"
             peliculas_en_db = connectToMySQL('CinePediarepaso').query_db(query,datos)
 
+            return cls(peliculas_en_db[0])
+
         #Metodo para editar registro
         @classmethod
         def update(cls, datos):
             query = "UPDATE peliculas SET nombre=%(nombre)s, director=%(director)s, fecha_estreno=%(fecha_estreno)s, sinopsis=%(sinopsis)s, updated_at=NOW(), %(usuario_id)s WHERE id = %(id)s;"
+
             return connectToMySQL('CinePediarepaso').query_db(query, datos)
 
         #Metodo para eliminar 1 registro
